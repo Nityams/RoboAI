@@ -43,8 +43,9 @@ class notAdvanced: Robot {
     var lastKnownPositionTimestamp = CGFloat(0.0)
     let firingTimeout = CGFloat(2.0)
     var scanned:Bool = false
-    var enemyPos:CGPoint = CGPoint(x: 0, y: 0)
-    
+    var enemyPos:CGPoint = CGPoint(x: 30, y: 170)
+    var noTurn:Bool = true
+    var hp:Int = 0
     
     override func run() {
         while true {
@@ -83,38 +84,64 @@ class notAdvanced: Robot {
         
         // check where we are
         // and shoot by covering areas
-//        
-//        let myPos = posIndex()
-//        switch myPos {
-//        case .BottomRight:
-//            <#code#>
-//        case .BottomLeft:
-//            
-//        case 
-//        default:
-//            <#code#>
-//        }
-//        
-//        turnToCenter()
         
-        switch actionIndex % 5 {          // should be % of number of possible actions
+        let myPos = posIndex()
+        if(noTurn || myPos == .Middle){
+            switch myPos
+            {
+            case .BottomRight:
+                turnRobotRight(45)
+                noTurn = false
+                break
+            case .BottomLeft:
+                turnRobotLeft(45)
+                noTurn = false
+                break
+            case .TopLeft:
+                turnRobotRight(45)
+                noTurn = false
+                break
+            case .TopRight:
+                turnRobotLeft(45)
+                noTurn = false
+                break
+            default:
+                noTurn = true
+                break;
+            }
+        }
+        //turnToCenter()
+        
+        if(hp > 6)
+        {
+            turnRobotLeft(180)
+            hp = 0
+        }
+        switch actionIndex % 6 {          // should be % of number of possible actions
         case 0:
             moveAhead(50)
             shoot()
         case 1:
-            turnRobotLeft(20)
+            turnRobotLeft(30)
             shoot()
         case 2:
             moveAhead(50)
             shoot()
         case 3:
-            turnRobotRight(20)
+            turnRobotRight(30)
+            shoot()
+        case 4:
+            turnRobotLeft(40)
+            shoot()
+        case 5:
+            turnRobotRight(40)
             shoot()
         default:
             shoot()
             break
         }
         actionIndex += 1
+        hp += 1
     }
     
     func turnToCenter() {
@@ -138,7 +165,7 @@ class notAdvanced: Robot {
     }
     
     func goToCenter(){
-        turnToCenter()
+        //turnToCenter()
         bodyToCenter()
         moveAhead(20)
         
@@ -184,7 +211,7 @@ class notAdvanced: Robot {
         }
     }
     func performRunFireAction() {
-            let angle = Int(angleBetweenGunHeadingDirectionAndWorldPosition(lastKnownPosition))
+            let angle = Int(angleBetweenGunHeadingDirectionAndWorldPosition(enemyPos))
             if angle >= 0 {
                 turnGunRight(abs(angle))
             } else {
@@ -193,6 +220,16 @@ class notAdvanced: Robot {
             shoot()
         
     }
+    override func bulletHitEnemy(bullet: Bullet!) {
+        // unimplemented but could be powerful to use this...
+        //lastKnownPosition = bullet.position;
+        hp = 0;
+        enemyPos = bullet.position
+        scannedRobot(nil, atPosition: bullet.position)
+        
+        
+    }
+
     
     override func scannedRobot(robot: Robot!, atPosition position: CGPoint) {
        print("scanned")
@@ -219,8 +256,6 @@ class notAdvanced: Robot {
     
     func performRunAway()
     {
-        //straightUp()
-        
         if currentRobotState == .Firing || currentRobotState == .Searching
         {
             print("firing canceld and running away")
@@ -231,8 +266,8 @@ class notAdvanced: Robot {
         print("got hit")
         
         if scanned{
-            moveAhead(900)
-            turnRobotLeft(180)
+            moveBack(900)
+          //  turnRobotLeft(180)
             shoot()
             shoot()
             shoot()
@@ -262,11 +297,5 @@ class notAdvanced: Robot {
             
     }
     
-    override func bulletHitEnemy(bullet: Bullet!) {
-        // unimplemented but could be powerful to use this...
-        //lastKnownPosition = bullet.position;
-        enemyPos = bullet.position
-        scannedRobot(nil, atPosition: bullet.position)
-    }
     
 }
